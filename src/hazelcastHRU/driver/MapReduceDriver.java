@@ -47,7 +47,7 @@ import java.util.Map;
  * - read the documentation this demo is for: http://bit.ly/1nQSxhH
  */
 public class MapReduceDriver {
-    private static int NUM_HRU = 1000; // How many test HRUs we'll generate
+    private static final int NUM_HRU = 2; // How many test HRUs we'll generate
 
     // Commandline argument (optional): <size> to set the minimum number of nodes on this cluster.
     // If no argument is specified, the mapreduce job will run locally 
@@ -70,19 +70,19 @@ public class MapReduceDriver {
         try {
             fillMapWithData(hazelcastInstance);
 
-            Map<String, Double> slopeAvgs = mapReduce(hazelcastInstance);
+            Map<String, Double[]> slopeAvgs = mapReduce(hazelcastInstance);
             
-            for (Map.Entry<String, Double> entry : slopeAvgs.entrySet()) {
-                System.out.println("\tSlope type'" + entry.getKey() + "' has average " + entry.getValue() + " angle");
+            for (Map.Entry<String, Double[]> entry : slopeAvgs.entrySet()) {
+                System.out.println("\tSlope type'" + entry.getKey() + "' has average " + entry.getValue()[0] + " angle, and max of "+entry.getValue()[1]);
             }
         } finally {
             //destroy shared data we've created here
-            hazelcastInstance.getMap("articles").destroy();
+            //hazelcastInstance.getMap("articles").destroy();
             Hazelcast.shutdownAll();
         }
     }
 
-    private static Map<String, Double> mapReduce(HazelcastInstance hazelcastInstance) throws Exception {
+    private static Map<String, Double[]> mapReduce(HazelcastInstance hazelcastInstance) throws Exception {
 
         // Retrieving the JobTracker by name
         JobTracker jobTracker = hazelcastInstance.getJobTracker("default");
@@ -94,7 +94,7 @@ public class MapReduceDriver {
         Job<Integer, HRU> job = jobTracker.newJob(source);
 
         // Creating a new Job
-        ICompletableFuture<Map<String, Double>> future = job // returned future
+        ICompletableFuture<Map<String, Double[]>> future = job // returned future
                 .mapper(new HRUMapper())             // adding a mapper
                 .reducer(new HRUReducerFactory())    // adding a reducer through the factory
                 .submit();                                 // submit the task
@@ -106,10 +106,10 @@ public class MapReduceDriver {
         return future.get();
     }
 
-    private static ExecutionCallback<Map<String, Double>> buildCallback() {
-        return new ExecutionCallback<Map<String, Double>>() {
+    private static ExecutionCallback<Map<String, Double[]>> buildCallback() {
+        return new ExecutionCallback<Map<String, Double[]>>() {
             @Override
-            public void onResponse(Map<String, Double> stringLongMap) {
+            public void onResponse(Map<String, Double[]> stringLongMap) {
                 System.out.println("Calculation finished! :)");
             }
 
@@ -125,7 +125,7 @@ public class MapReduceDriver {
         for(int i=1;i<=NUM_HRU;i++){
             HRU tmp = new HRU();
             tmp.ID = i;
-            tmp.slope = (Math.random() * (90 + 1)); // generate in range [0,90]
+            tmp.slope = (Math.random() * (90)); // generate in range [0,90]
             map.put(new Integer(i), tmp);
         }
     }

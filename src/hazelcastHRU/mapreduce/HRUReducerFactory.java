@@ -20,29 +20,31 @@ import com.hazelcast.mapreduce.Reducer;
 import com.hazelcast.mapreduce.ReducerFactory;
 
 public class HRUReducerFactory
-        implements ReducerFactory<String, Double, Double> {
+        implements ReducerFactory<String, Double, Double[]> {
 
     @Override
-    public Reducer<String, Double, Double> newReducer(String key) {
+    public Reducer<String, Double, Double[]> newReducer(String key) {
         // Create a new Reducer for the given key
-        return new WordCountReducer();
+        return new SlopeAverageMaxReducer();
     }
 
-    private class WordCountReducer extends Reducer<String, Double, Double> {
+    private class SlopeAverageMaxReducer extends Reducer<String, Double, Double[]> {
 
         private volatile double sum = 0;
         private volatile double count = 0;
+        private volatile double max = 0;
 
         @Override
         public void reduce(Double slope) {
             sum += slope;
             count++;
+            if(slope>max) { max = slope; }
         }
 
         @Override
-        public Double finalizeReduce() {
+        public Double[] finalizeReduce() {
             // Return the final reduced sum
-            return sum/count;
+            return new Double[] {sum/count, max};
         }
     }
 }
