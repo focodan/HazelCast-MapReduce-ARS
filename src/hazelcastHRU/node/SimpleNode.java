@@ -8,9 +8,20 @@ package hazelcastHRU.node;
  */
 import com.hazelcast.core.*;
 import com.hazelcast.config.*;
+
  
 public class SimpleNode {
- 
+    
+    public void run(){
+        HazelcastInstance instance = Hazelcast.newHazelcastInstance(new Config());
+    }
+    
+    public void run(String groupID){
+        Config config = new Config();
+        config.getGroupConfig().setName(groupID);
+        HazelcastInstance instance = Hazelcast.newHazelcastInstance(config);
+    }
+    
     public static void main(String[] args) {
         Config config = new Config();
         config.getGroupConfig().setName("HRU");

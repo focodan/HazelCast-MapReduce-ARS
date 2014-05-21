@@ -42,31 +42,30 @@ import java.util.Map;
  * - read the Javadoc: http://hazelcast.org/docs/latest/javadoc/
  * - read the documentation this demo is for: http://bit.ly/1nQSxhH
  */
-public class MapReduceDriver {
-    private static final int NUM_HRU = 100000; // How many test HRUs we'll generate
+public class MapReduceDriverOMS {
+    private final int NUM_HRU; // How many test HRUs we'll generate
+    private final Integer MIN_C_SIZE; // How many instances we'll need in our cluster before executing a MapR job
 
-    // Commandline argument (optional): <size> to set the minimum number of nodes on this cluster.
-    // If no argument is specified, the mapreduce job will run locally 
-    public static void main(String[] args) throws Exception {
+    public MapReduceDriverOMS(){
+        this(1,100); // default case: Run MapR job on this local instance, 100 HRUs
+    }
+    
+    public MapReduceDriverOMS(int minClusterSize, int numHRU){
+        NUM_HRU = numHRU;
+        MIN_C_SIZE = minClusterSize; 
+    }
+
+    // Runs a mapreduce job
+    public void run(String groupID) throws Exception {
+        
         Config config = new Config();
-        //start // we likely won't use the management center
-//        ManagementCenterConfig mancenter = config.getManagementCenterConfig();
-//        mancenter.setEnabled(true);
-//        mancenter.setUrl("http://localhost:8080/mancenter-3.2.1");
-        //end
-        config.getGroupConfig().setName("HRU"); //Nodes which identify as "HRU" are in this same cluster
+        config.getGroupConfig().setName(groupID); //Nodes which identify as "HRU" are in this same cluster
         
         // set a minimum number of nodes in the cluster before the mapreduce job can begin
-        if(args.length >= 1){
-            try{
-                config.setProperty("hazelcast.initial.min.cluster.size", args[0] );
-            }catch(Exception e){
-                System.out.println(e.getMessage());
-            }
-        }
+        config.setProperty("hazelcast.initial.min.cluster.size", MIN_C_SIZE.toString());
         
         HazelcastInstance hazelcastInstance = Hazelcast.newHazelcastInstance(config);
-        System.out.println("This node's name is:"+hazelcastInstance.getCluster());
+        //System.out.println("This node's name is:"+hazelcastInstance.getCluster());
         
         try {
             fillMapWithData(hazelcastInstance);
@@ -83,7 +82,7 @@ public class MapReduceDriver {
         }
     }
 
-    private static Map<String, Double[]> mapReduce(HazelcastInstance hazelcastInstance) throws Exception {
+    private  Map<String, Double[]> mapReduce(HazelcastInstance hazelcastInstance) throws Exception {
 
         // Retrieving the JobTracker by name
         JobTracker jobTracker = hazelcastInstance.getJobTracker("default");
@@ -107,7 +106,7 @@ public class MapReduceDriver {
         return future.get();
     }
 
-    private static ExecutionCallback<Map<String, Double[]>> buildCallback() {
+    private  ExecutionCallback<Map<String, Double[]>> buildCallback() {
         return new ExecutionCallback<Map<String, Double[]>>() {
             @Override
             public void onResponse(Map<String, Double[]> stringLongMap) {
@@ -121,7 +120,7 @@ public class MapReduceDriver {
         };
     }
 
-    private static void fillMapWithData(HazelcastInstance hazelcastInstance) throws Exception {
+    private  void fillMapWithData(HazelcastInstance hazelcastInstance) throws Exception {
         IMap<Integer, HRU> map = hazelcastInstance.getMap("articles");
         for(int i=1;i<=NUM_HRU;i++){
             HRU tmp = new HRU();
