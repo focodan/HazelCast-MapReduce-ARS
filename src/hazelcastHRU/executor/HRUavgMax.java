@@ -1,6 +1,8 @@
 package hazelcastHRU.executor;
 
 import com.hazelcast.config.Config;
+import com.hazelcast.client.config.ClientConfig;
+import com.hazelcast.client.HazelcastClient;
 import com.hazelcast.core.Hazelcast;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.MultiMap;
@@ -30,8 +32,8 @@ public class HRUavgMax implements Callable<String[]>, Serializable {
 
     @Override
     public String[] call() {
-        Config cfg = new Config();
-        HazelcastInstance hz = Hazelcast.newHazelcastInstance(cfg);
+        ClientConfig cfg = new ClientConfig();
+        HazelcastInstance hz = HazelcastClient.newHazelcastClient(cfg);
 
         MultiMap<String,HRU> hrusMap  = hz.getMultiMap("HRUs");
         Collection<HRU> hrus = hrusMap.get(level);
