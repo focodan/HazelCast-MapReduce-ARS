@@ -39,9 +39,15 @@ public class ExecutorDriver {
         
         fillMapWithData(hz);
         
+<<<<<<< HEAD
         es.submitToKeyOwner(new HRUavgMax("LOW"),"LOW",buildCallback());
         es.submitToKeyOwner(new HRUavgMax("MED"),"MED",buildCallback());
         es.submitToKeyOwner(new HRUavgMax("HIGH"),"HIGH",buildCallback());
+=======
+        es.submit(new HRUavgMax("LOW"),buildCallback());
+        es.submit(new HRUavgMax("MED"),buildCallback());
+        es.submit(new HRUavgMax("HIGH"),buildCallback());
+>>>>>>> 48b7fc93a3d66f38a5161a176997e90c6b134d7f
 
     }
         
